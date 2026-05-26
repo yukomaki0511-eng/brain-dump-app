@@ -406,6 +406,18 @@
       background: var(--error-bg);
       border-color: var(--error-border);
     }
+
+    .list-filter {
+      margin-bottom: 1rem;
+    }
+
+    .list-filter label {
+      margin-bottom: 0.4rem;
+    }
+
+    .list-filter .field-select {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -462,6 +474,14 @@
 
     <section class="card" aria-labelledby="list-heading">
       <h2 id="list-heading">保存済みメモ</h2>
+      <div class="list-filter">
+        <label for="filter-category-select">カテゴリで絞り込み</label>
+        <div class="field-select">
+          <select id="filter-category-select">
+            <option value="all">すべて</option>
+          </select>
+        </div>
+      </div>
       <ul id="memo-list" aria-busy="true">
         <li class="list-status">読み込み中…</li>
       </ul>
@@ -485,6 +505,8 @@
     let editingId = null;
     let messageTimer = null;
     let categoriesById = {};
+    let allMemos = [];
+    let filterCategoryId = "all";
 
     const messageEl = document.getElementById("message");
     const memoForm = document.getElementById("memo-form");
@@ -495,6 +517,7 @@
     const saveBtn = document.getElementById("save-btn");
     const cancelEditBtn = document.getElementById("cancel-edit-btn");
     const memoListEl = document.getElementById("memo-list");
+    const filterCategorySelect = document.getElementById("filter-category-select");
 
     function escapeHtml(text) {
       const div = document.createElement("div");
@@ -610,6 +633,30 @@
       }
 
       renderCategoryOptions(data, previousValue);
+      renderFilterCategoryOptions(data);
+    }
+
+    function renderFilterCategoryOptions(categories) {
+      filterCategorySelect.innerHTML = "";
+
+      const allOpt = document.createElement("option");
+      allOpt.value = "all";
+      allOpt.textContent = "すべて";
+      filterCategorySelect.appendChild(allOpt);
+
+      const noneOpt = document.createElement("option");
+      noneOpt.value = "none";
+      noneOpt.textContent = "未分類";
+      filterCategorySelect.appendChild(noneOpt);
+
+      (categories || []).forEach((cat) => {
+        const option = document.createElement("option");
+        option.value = cat.id;
+        option.textContent = cat.name;
+        filterCategorySelect.appendChild(option);
+      });
+
+      filterCategorySelect.value = filterCategoryId;
     }
 
     function setEditMode(id) {
@@ -644,35 +691,17 @@
       return text.slice(0, maxLen) + "…";
     }
 
-    async function loadMemos() {
-      memoListEl.setAttribute("aria-busy", "true");
-      memoListEl.innerHTML = '<li class="list-status">読み込み中…</li>';
-
-      try {
-      const { data, error } = await supabaseClient
-        .from("brain_dumps")
-        .select(
-          "id, title, category_id, content, next_action, created_at, categories ( name )"
-        )
-        .order("created_at", { ascending: false });
-
-      memoListEl.setAttribute("aria-busy", "false");
-
-      if (error) {
-        console.error("loadMemos:", error);
-        memoListEl.innerHTML =
-          '<li class="list-status error">一覧の読み込みに失敗しました</li>';
-        showMessage("一覧の読み込みに失敗しました", "error");
+    function renderMemoList(memos) {
+      if (!memos || memos.length === 0) {
+        const emptyMessage =
+          allMemos.length === 0
+            ? "メモはまだありません"
+            : "該当するメモはありません";
+        memoListEl.innerHTML = `<li class="list-status">${emptyMessage}</li>`;
         return;
       }
 
-      if (!data || data.length === 0) {
-        memoListEl.innerHTML =
-          '<li class="list-status">メモはまだありません</li>';
-        return;
-      }
-
-      memoListEl.innerHTML = data
+      memoListEl.innerHTML = memos
         .map((memo) => {
           const isEditing = editingId === memo.id;
           return `
@@ -692,6 +721,44 @@
           `;
         })
         .join("");
+    }
+
+    function applyCategoryFilter() {
+      let filtered = allMemos;
+
+      if (filterCategoryId === "none") {
+        filtered = allMemos.filter((memo) => !memo.category_id);
+      } else if (filterCategoryId !== "all") {
+        filtered = allMemos.filter((memo) => memo.category_id === filterCategoryId);
+      }
+
+      renderMemoList(filtered);
+    }
+
+    async function loadMemos() {
+      memoListEl.setAttribute("aria-busy", "true");
+      memoListEl.innerHTML = '<li class="list-status">読み込み中…</li>';
+
+      try {
+        const { data, error } = await supabaseClient
+          .from("brain_dumps")
+          .select(
+            "id, title, category_id, content, next_action, created_at, categories ( name )"
+          )
+          .order("created_at", { ascending: false });
+
+        memoListEl.setAttribute("aria-busy", "false");
+
+        if (error) {
+          console.error("loadMemos:", error);
+          memoListEl.innerHTML =
+            '<li class="list-status error">一覧の読み込みに失敗しました</li>';
+          showMessage("一覧の読み込みに失敗しました", "error");
+          return;
+        }
+
+        allMemos = data || [];
+        applyCategoryFilter();
       } catch (err) {
         console.error("loadMemos:", err);
         memoListEl.setAttribute("aria-busy", "false");
@@ -803,6 +870,11 @@
       showMessage("削除しました", "success");
       await loadMemos();
     }
+
+    filterCategorySelect.addEventListener("change", () => {
+      filterCategoryId = filterCategorySelect.value;
+      applyCategoryFilter();
+    });
 
     memoForm.addEventListener("submit", saveMemo);
 
