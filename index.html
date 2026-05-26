@@ -145,9 +145,9 @@
       font-family: inherit;
       font-weight: 500;
       margin-bottom: 1.1rem;
-      background: var(--surface-soft);
+      background-color: var(--surface-soft);
       color: var(--text);
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     }
 
     input[type="text"]::placeholder,
@@ -160,17 +160,47 @@
     textarea:focus {
       outline: none;
       border-color: var(--primary);
-      background: #fff;
+      background-color: #fff;
       box-shadow: 0 0 0 4px rgba(245, 168, 197, 0.22);
+    }
+
+    .field-select {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 1.1rem;
+    }
+
+    .field-select select {
+      margin-bottom: 0;
+      min-height: 48px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
 
     select {
       cursor: pointer;
+      -webkit-appearance: none;
       appearance: none;
+      background-color: var(--surface-soft);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a8aa8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 1rem center;
       padding-right: 2.5rem;
+    }
+
+    select:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* スマホ・タブレットはネイティブの選択UIを使う（iOSで確実に開く） */
+    @media (hover: none) and (pointer: coarse) {
+      select {
+        -webkit-appearance: menulist;
+        appearance: auto;
+        background-image: none;
+        padding-right: 1rem;
+      }
     }
 
     textarea {
@@ -400,9 +430,11 @@
         />
 
         <label for="category-select">カテゴリ</label>
-        <select id="category-select" name="category_id">
-          <option value="">未選択</option>
-        </select>
+        <div class="field-select">
+          <select id="category-select" name="category_id">
+            <option value="">読み込み中…</option>
+          </select>
+        </div>
 
         <label for="content-input">本文</label>
         <textarea
@@ -537,23 +569,16 @@
       return null;
     }
 
-    async function loadCategories() {
-      const { data, error } = await supabaseClient
-        .from("categories")
-        .select("id, name")
-        .order("sort_order", { ascending: true });
-
-      if (error) {
-        console.error("loadCategories:", error);
-        showMessage("カテゴリの読み込みに失敗しました", "error");
-        return;
-      }
-
-      const selected = categorySelect.value;
-      categorySelect.innerHTML = '<option value="">未選択</option>';
+    function renderCategoryOptions(categories, selectedValue) {
+      categorySelect.innerHTML = "";
       categoriesById = {};
 
-      (data || []).forEach((cat) => {
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = "未選択";
+      categorySelect.appendChild(emptyOption);
+
+      (categories || []).forEach((cat) => {
         categoriesById[cat.id] = cat.name;
         const option = document.createElement("option");
         option.value = cat.id;
@@ -561,7 +586,30 @@
         categorySelect.appendChild(option);
       });
 
-      categorySelect.value = selected;
+      categorySelect.value = selectedValue || "";
+    }
+
+    async function loadCategories() {
+      const previousValue = categorySelect.value;
+      categorySelect.disabled = true;
+      categorySelect.innerHTML = '<option value="">読み込み中…</option>';
+
+      const { data, error } = await supabaseClient
+        .from("categories")
+        .select("id, name")
+        .order("sort_order", { ascending: true });
+
+      categorySelect.disabled = false;
+
+      if (error) {
+        console.error("loadCategories:", error);
+        categorySelect.innerHTML =
+          '<option value="">カテゴリを取得できません</option>';
+        showMessage("カテゴリの読み込みに失敗しました", "error");
+        return;
+      }
+
+      renderCategoryOptions(data, previousValue);
     }
 
     function setEditMode(id) {
