@@ -350,6 +350,20 @@
       font-style: italic;
     }
 
+    .memo-meta a,
+    .memo-excerpt a {
+      color: #7b6ab8;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-all;
+    }
+
+    .memo-meta a:hover,
+    .memo-excerpt a:hover {
+      color: #5f4f9a;
+    }
+
     .memo-excerpt {
       margin: 0.5rem 0 1rem;
       padding: 0.75rem 0.9rem;
@@ -525,6 +539,35 @@
       return div.innerHTML;
     }
 
+    const URL_IN_TEXT_RE = /https?:\/\/[^\s<]+/gi;
+
+    function linkifyText(text) {
+      const str = String(text);
+      let result = "";
+      let lastIndex = 0;
+      let match;
+
+      URL_IN_TEXT_RE.lastIndex = 0;
+      while ((match = URL_IN_TEXT_RE.exec(str)) !== null) {
+        result += escapeHtml(str.slice(lastIndex, match.index));
+
+        let url = match[0];
+        const trailing = url.match(/[.,;:!?)]+$/);
+        const trailingText = trailing ? trailing[0] : "";
+        if (trailingText) {
+          url = url.slice(0, -trailingText.length);
+        }
+
+        const safeUrl = escapeHtml(url);
+        result += `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a>`;
+        result += escapeHtml(trailingText);
+        lastIndex = match.index + match[0].length;
+      }
+
+      result += escapeHtml(str.slice(lastIndex));
+      return result;
+    }
+
     function showMessage(text, type) {
       clearTimeout(messageTimer);
       messageEl.textContent = text;
@@ -572,6 +615,13 @@
         return '<span class="memo-meta-empty">—</span>';
       }
       return escapeHtml(String(value));
+    }
+
+    function displayOptionalWithLinks(value) {
+      if (value == null || String(value).trim() === "") {
+        return '<span class="memo-meta-empty">—</span>';
+      }
+      return linkifyText(String(value));
     }
 
     function setFormBusy(busy) {
@@ -711,8 +761,8 @@
                 <time class="memo-date" datetime="${memo.created_at}">${escapeHtml(formatDate(memo.created_at))}</time>
               </div>
               <p class="memo-meta"><span class="memo-meta-label">カテゴリ:</span> ${displayOptional(getCategoryName(memo))}</p>
-              <p class="memo-meta"><span class="memo-meta-label">次のアクション:</span> ${displayOptional(memo.next_action)}</p>
-              <p class="memo-excerpt">${escapeHtml(excerpt(memo.content, 120))}</p>
+              <p class="memo-meta"><span class="memo-meta-label">次のアクション:</span> ${displayOptionalWithLinks(memo.next_action)}</p>
+              <p class="memo-excerpt">${linkifyText(excerpt(memo.content, 120))}</p>
               <div class="memo-actions">
                 <button type="button" class="btn-edit" data-action="edit" data-id="${memo.id}">編集</button>
                 <button type="button" class="btn-delete" data-action="delete" data-id="${memo.id}">削除</button>
