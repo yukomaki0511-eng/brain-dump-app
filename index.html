@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ブレインダンプ</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap");
+
+    :root {
+      --bg-top: #fff8fc;
+      --bg-bottom: #f3f8ff;
+      --surface: #ffffff;
+      --surface-soft: #fffafd;
+      --text: #5c4d63;
+      --text-strong: #4a3d52;
+      --muted: #9a8aa8;
+      --border: #f0dce8;
+      --border-input: #ecd9ea;
+      --primary: #f5a8c5;
+      --primary-hover: #ef8fb3;
+      --primary-shadow: rgba(245, 168, 197, 0.45);
+      --lavender: #c9b8f0;
+      --lavender-hover: #b9a3eb;
+      --mint: #b8ebd4;
+      --peach: #ffd4c4;
+      --success-bg: #e8faf2;
+      --success-text: #3d8f6e;
+      --success-border: #b8e8d0;
+      --error-bg: #fff0f3;
+      --error-text: #c45c72;
+      --error-border: #f5c4d0;
+      --danger: #f5a0b0;
+      --danger-hover: #ef889c;
+      --radius-sm: 14px;
+      --radius-md: 20px;
+      --radius-lg: 24px;
+      --radius-pill: 999px;
+      --shadow-card: 0 8px 24px rgba(180, 140, 170, 0.12);
+      --shadow-card-hover: 0 12px 28px rgba(180, 140, 170, 0.18);
+      --shadow-btn: 0 4px 14px rgba(245, 168, 197, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Yu Gothic UI", sans-serif;
+      background: linear-gradient(165deg, var(--bg-top) 0%, var(--bg-bottom) 55%, #fef9f3 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem 1.15rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-strong);
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      margin: 0 0 1.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    #message {
+      min-height: 1.25rem;
+      margin-bottom: 1.15rem;
+      padding: 0.85rem 1.15rem;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: none;
+      border: 2px solid transparent;
+    }
+
+    #message.is-visible {
+      display: block;
+    }
+
+    #message.success {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    #message.error {
+      background: var(--error-bg);
+      color: var(--error-text);
+      border-color: var(--error-border);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 1.5rem 1.35rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .card h2 {
+      margin: 0 0 1.15rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-strong);
+      padding-bottom: 0.65rem;
+      border-bottom: 2px dashed var(--border);
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      font-size: 0.92rem;
+      color: var(--text-strong);
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 2px solid var(--border-input);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      font-weight: 500;
+      margin-bottom: 1.1rem;
+      background: var(--surface-soft);
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    input[type="text"]::placeholder,
+    textarea::placeholder {
+      color: #c4b0c8;
+    }
+
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(245, 168, 197, 0.22);
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a8aa8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    textarea {
+      min-height: 9rem;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    button {
+      min-height: 46px;
+      padding: 0.65rem 1.35rem;
+      border: none;
+      border-radius: var(--radius-pill);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.03em;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #save-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, #f8b8d8 100%);
+      color: #fff;
+      box-shadow: var(--shadow-btn);
+    }
+
+    #save-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--primary-hover) 0%, #f5a8c5 100%);
+      box-shadow: 0 6px 18px var(--primary-shadow);
+    }
+
+    #cancel-edit-btn {
+      background: #fff;
+      color: var(--muted);
+      border: 2px solid var(--border-input);
+      box-shadow: none;
+      display: none;
+    }
+
+    #cancel-edit-btn:hover:not(:disabled) {
+      background: var(--surface-soft);
+      color: var(--text);
+      border-color: var(--lavender);
+    }
+
+    #cancel-edit-btn.is-visible {
+      display: inline-block;
+    }
+
+    #memo-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .memo-item {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.2rem;
+      background: linear-gradient(145deg, #ffffff 0%, var(--surface-soft) 100%);
+      box-shadow: var(--shadow-card);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .memo-item:hover {
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-2px);
+    }
+
+    .memo-item.is-editing {
+      border-color: var(--lavender);
+      background: linear-gradient(145deg, #fdfaff 0%, #fff5fa 100%);
+      box-shadow: 0 0 0 4px rgba(201, 184, 240, 0.25), var(--shadow-card);
+    }
+
+    .memo-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.65rem;
+      padding-bottom: 0.55rem;
+      border-bottom: 2px dotted var(--border);
+    }
+
+    .memo-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-strong);
+      line-height: 1.4;
+    }
+
+    .memo-date {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+      white-space: nowrap;
+      background: var(--peach);
+      padding: 0.2rem 0.65rem;
+      border-radius: var(--radius-pill);
+    }
+
+    .memo-meta {
+      margin: 0 0 0.4rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      padding: 0.35rem 0.65rem;
+      background: rgba(201, 184, 240, 0.15);
+      border-radius: var(--radius-sm);
+    }
+
+    .memo-meta-label {
+      font-weight: 700;
+      color: #8f7dad;
+      margin-right: 0.35rem;
+    }
+
+    .memo-meta-empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .memo-excerpt {
+      margin: 0.5rem 0 1rem;
+      padding: 0.75rem 0.9rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 500;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(184, 235, 212, 0.2);
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--mint);
+      line-height: 1.6;
+    }
+
+    .memo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      padding-top: 0.25rem;
+    }
+
+    .btn-edit {
+      background: linear-gradient(135deg, var(--lavender) 0%, #ddd0f5 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(201, 184, 240, 0.4);
+    }
+
+    .btn-edit:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--lavender-hover) 0%, var(--lavender) 100%);
+    }
+
+    .btn-delete {
+      background: linear-gradient(135deg, var(--danger) 0%, #f8b8c8 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(245, 160, 176, 0.4);
+    }
+
+    .btn-delete:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--danger-hover) 0%, var(--danger) 100%);
+    }
+
+    .list-status {
+      color: var(--muted);
+      text-align: center;
+      padding: 2rem 1rem;
+      font-weight: 500;
+      background: var(--surface-soft);
+      border-radius: var(--radius-md);
+      border: 2px dashed var(--border);
+    }
+
+    .list-status.error {
+      color: var(--error-text);
+      background: var(--error-bg);
+      border-color: var(--error-border);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>ブレインダンプ</h1>
+      <p class="subtitle">思考・アイデアを記録して、あとから見返す</p>
+    </header>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <section class="card" aria-labelledby="form-heading">
+      <h2 id="form-heading">メモを書く</h2>
+      <form id="memo-form">
+        <label for="title-input">タイトル</label>
+        <input
+          type="text"
+          id="title-input"
+          name="title"
+          placeholder="例：今日の気づき"
+          autocomplete="off"
+        />
+
+        <label for="category-select">カテゴリ</label>
+        <select id="category-select" name="category_id">
+          <option value="">未選択</option>
+        </select>
+
+        <label for="content-input">本文</label>
+        <textarea
+          id="content-input"
+          name="content"
+          placeholder="思いついたことを書いてください"
+          rows="8"
+        ></textarea>
+
+        <label for="next-action-input">次のアクション</label>
+        <input
+          type="text"
+          id="next-action-input"
+          name="next_action"
+          placeholder="例：明日メモを整理する"
+          autocomplete="off"
+        />
+
+        <div class="form-actions">
+          <button type="submit" id="save-btn">保存</button>
+          <button type="button" id="cancel-edit-btn">編集をやめる</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="list-heading">
+      <h2 id="list-heading">保存済みメモ</h2>
+      <ul id="memo-list" aria-busy="true">
+        <li class="list-status">読み込み中…</li>
+      </ul>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    const SUPABASE_URL = "https://lcegqqyzoiedxhxdbylp.supabase.co";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjZWdxcXl6b2llZHhoeGRieWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMzEwMjAsImV4cCI6MjA5MzkwNzAyMH0.HbXNZc53HR4WDlNA2BHsqy_Z3FmmVhj_aTSCp6u9ax8";
+
+    if (typeof supabase === "undefined" || !supabase.createClient) {
+      document.getElementById("memo-list").innerHTML =
+        '<li class="list-status error">Supabase SDK の読み込みに失敗しました。ネット接続を確認して再読み込みしてください。</li>';
+      throw new Error("Supabase SDK not loaded");
+    }
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let editingId = null;
+    let messageTimer = null;
+    let categoriesById = {};
+
+    const messageEl = document.getElementById("message");
+    const memoForm = document.getElementById("memo-form");
+    const titleInput = document.getElementById("title-input");
+    const categorySelect = document.getElementById("category-select");
+    const contentInput = document.getElementById("content-input");
+    const nextActionInput = document.getElementById("next-action-input");
+    const saveBtn = document.getElementById("save-btn");
+    const cancelEditBtn = document.getElementById("cancel-edit-btn");
+    const memoListEl = document.getElementById("memo-list");
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showMessage(text, type) {
+      clearTimeout(messageTimer);
+      messageEl.textContent = text;
+      messageEl.className = type === "success" ? "success is-visible" : "error is-visible";
+      messageTimer = setTimeout(() => {
+        messageEl.className = "";
+        messageEl.textContent = "";
+      }, 4000);
+    }
+
+    function validateInputs() {
+      const title = titleInput.value.trim();
+      const content = contentInput.value.trim();
+
+      if (!title) {
+        showMessage("タイトルを入力してください", "error");
+        titleInput.focus();
+        return null;
+      }
+      if (!content) {
+        showMessage("本文を入力してください", "error");
+        contentInput.focus();
+        return null;
+      }
+      return {
+        title,
+        content,
+        category_id: toOptionalUuid(categorySelect.value),
+        next_action: toOptionalText(nextActionInput.value),
+      };
+    }
+
+    function toOptionalUuid(value) {
+      const trimmed = String(value).trim();
+      return trimmed === "" ? null : trimmed;
+    }
+
+    function toOptionalText(value) {
+      const trimmed = value.trim();
+      return trimmed === "" ? null : trimmed;
+    }
+
+    function displayOptional(value) {
+      if (value == null || String(value).trim() === "") {
+        return '<span class="memo-meta-empty">—</span>';
+      }
+      return escapeHtml(String(value));
+    }
+
+    function setFormBusy(busy) {
+      saveBtn.disabled = busy;
+      cancelEditBtn.disabled = busy;
+      categorySelect.disabled = busy;
+    }
+
+    function getCategoryName(memo) {
+      const joined = memo.categories;
+      if (joined) {
+        if (Array.isArray(joined)) return joined[0]?.name ?? null;
+        if (joined.name) return joined.name;
+      }
+      if (memo.category_id && categoriesById[memo.category_id]) {
+        return categoriesById[memo.category_id];
+      }
+      return null;
+    }
+
+    async function loadCategories() {
+      const { data, error } = await supabaseClient
+        .from("categories")
+        .select("id, name")
+        .order("sort_order", { ascending: true });
+
+      if (error) {
+        console.error("loadCategories:", error);
+        showMessage("カテゴリの読み込みに失敗しました", "error");
+        return;
+      }
+
+      const selected = categorySelect.value;
+      categorySelect.innerHTML = '<option value="">未選択</option>';
+      categoriesById = {};
+
+      (data || []).forEach((cat) => {
+        categoriesById[cat.id] = cat.name;
+        const option = document.createElement("option");
+        option.value = cat.id;
+        option.textContent = cat.name;
+        categorySelect.appendChild(option);
+      });
+
+      categorySelect.value = selected;
+    }
+
+    function setEditMode(id) {
+      editingId = id;
+      saveBtn.textContent = id ? "更新" : "保存";
+      cancelEditBtn.classList.toggle("is-visible", Boolean(id));
+    }
+
+    function clearForm() {
+      titleInput.value = "";
+      categorySelect.value = "";
+      contentInput.value = "";
+      nextActionInput.value = "";
+      setEditMode(null);
+    }
+
+    function formatDate(isoString) {
+      const date = new Date(isoString);
+      if (Number.isNaN(date.getTime())) return isoString;
+      return date.toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    function excerpt(text, maxLen) {
+      if (!text) return "";
+      if (text.length <= maxLen) return text;
+      return text.slice(0, maxLen) + "…";
+    }
+
+    async function loadMemos() {
+      memoListEl.setAttribute("aria-busy", "true");
+      memoListEl.innerHTML = '<li class="list-status">読み込み中…</li>';
+
+      try {
+      const { data, error } = await supabaseClient
+        .from("brain_dumps")
+        .select(
+          "id, title, category_id, content, next_action, created_at, categories ( name )"
+        )
+        .order("created_at", { ascending: false });
+
+      memoListEl.setAttribute("aria-busy", "false");
+
+      if (error) {
+        console.error("loadMemos:", error);
+        memoListEl.innerHTML =
+          '<li class="list-status error">一覧の読み込みに失敗しました</li>';
+        showMessage("一覧の読み込みに失敗しました", "error");
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        memoListEl.innerHTML =
+          '<li class="list-status">メモはまだありません</li>';
+        return;
+      }
+
+      memoListEl.innerHTML = data
+        .map((memo) => {
+          const isEditing = editingId === memo.id;
+          return `
+            <li class="memo-item${isEditing ? " is-editing" : ""}" data-id="${memo.id}">
+              <div class="memo-header">
+                <h3 class="memo-title">${escapeHtml(memo.title)}</h3>
+                <time class="memo-date" datetime="${memo.created_at}">${escapeHtml(formatDate(memo.created_at))}</time>
+              </div>
+              <p class="memo-meta"><span class="memo-meta-label">カテゴリ:</span> ${displayOptional(getCategoryName(memo))}</p>
+              <p class="memo-meta"><span class="memo-meta-label">次のアクション:</span> ${displayOptional(memo.next_action)}</p>
+              <p class="memo-excerpt">${escapeHtml(excerpt(memo.content, 120))}</p>
+              <div class="memo-actions">
+                <button type="button" class="btn-edit" data-action="edit" data-id="${memo.id}">編集</button>
+                <button type="button" class="btn-delete" data-action="delete" data-id="${memo.id}">削除</button>
+              </div>
+            </li>
+          `;
+        })
+        .join("");
+      } catch (err) {
+        console.error("loadMemos:", err);
+        memoListEl.setAttribute("aria-busy", "false");
+        memoListEl.innerHTML =
+          '<li class="list-status error">通信に失敗しました。接続を確認してください</li>';
+        showMessage("通信に失敗しました。接続を確認してください", "error");
+      }
+    }
+
+  
+    async function saveMemo(event) {
+      event.preventDefault();
+      const values = validateInputs();
+      if (!values) return;
+
+      setFormBusy(true);
+
+      if (editingId) {
+        const { error } = await supabaseClient
+          .from("brain_dumps")
+          .update({
+            title: values.title,
+            category_id: values.category_id,
+            content: values.content,
+            next_action: values.next_action,
+          })
+          .eq("id", editingId);
+
+        setFormBusy(false);
+
+        if (error) {
+          console.error("update:", error);
+          showMessage("更新に失敗しました", "error");
+          return;
+        }
+
+        showMessage("更新しました", "success");
+        clearForm();
+        await loadMemos();
+        return;
+      }
+
+      const { error } = await supabaseClient.from("brain_dumps").insert({
+        title: values.title,
+        category_id: values.category_id,
+        content: values.content,
+        next_action: values.next_action,
+      });
+
+      setFormBusy(false);
+
+      if (error) {
+        console.error("insert:", error);
+        showMessage(
+          "保存に失敗しました。しばらくしてから再度お試しください",
+          "error"
+        );
+        return;
+      }
+
+      showMessage("保存しました", "success");
+      clearForm();
+      await loadMemos();
+    }
+
+    async function startEdit(id) {
+      const { data, error } = await supabaseClient
+        .from("brain_dumps")
+        .select("title, category_id, content, next_action")
+        .eq("id", id)
+        .single();
+
+      if (error || !data) {
+        console.error("fetch for edit:", error);
+        showMessage("メモの読み込みに失敗しました", "error");
+        return;
+      }
+
+      titleInput.value = data.title ?? "";
+      categorySelect.value = data.category_id ?? "";
+      contentInput.value = data.content ?? "";
+      nextActionInput.value = data.next_action ?? "";
+      setEditMode(id);
+      await loadMemos();
+      titleInput.focus();
+    }
+
+    async function deleteMemo(id) {
+      const confirmed = confirm("このメモを削除しますか？");
+      if (!confirmed) return;
+
+      const buttons = memoListEl.querySelectorAll("button");
+      buttons.forEach((btn) => (btn.disabled = true));
+
+      const { error } = await supabaseClient.from("brain_dumps").delete().eq("id", id);
+
+      buttons.forEach((btn) => (btn.disabled = false));
+
+      if (error) {
+        console.error("delete:", error);
+        showMessage("削除に失敗しました", "error");
+        return;
+      }
+
+      if (editingId === id) {
+        clearForm();
+      }
+
+      showMessage("削除しました", "success");
+      await loadMemos();
+    }
+
+    memoForm.addEventListener("submit", saveMemo);
+
+    cancelEditBtn.addEventListener("click", () => {
+      clearForm();
+      loadMemos();
+    });
+
+    memoListEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const id = button.dataset.id;
+      const action = button.dataset.action;
+
+      if (action === "edit") {
+        startEdit(id);
+      } else if (action === "delete") {
+        deleteMemo(id);
+      }
+    });
+
+    async function init() {
+      await loadCategories();
+      await loadMemos();
+    }
+
+    init();
+  </script>
+</body>
+</html>
